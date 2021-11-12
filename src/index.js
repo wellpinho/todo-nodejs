@@ -30,6 +30,19 @@ function verifyIfExistsAccountCPF(req, res, next) {
   return next()
 }
 
+// função para fazer operação de depositar ou sacar
+function getBalance(statement) {
+  const balance = statement.reduce((acc, operation) => {
+    if (operation.type === 'credit') {
+      return acc + operation.amount
+    } else {
+      return acc - operation.amount
+    }
+  }, 0)
+
+  return balance
+}
+
 app.use(express.json())
 
 app.post('/account', (req, res) => {
@@ -72,7 +85,7 @@ app.post('/deposit', verifyIfExistsAccountCPF, (req, res) => {
     description,
     amount,
     created_at: new Date(),
-    type: 'Crédito'
+    type: 'credit'
   }
 
   customer.statement.push(statementOperation)
@@ -84,6 +97,33 @@ app.post('/deposit', verifyIfExistsAccountCPF, (req, res) => {
   // }
 
   return res.status(201).json('Depósito feito!')
+})
+
+app.post('/withdrawn', verifyIfExistsAccountCPF, (req, res) => {
+  const { customer } = req
+  const { amount } = req.body
+
+  // se o valor em conta for suficiente
+  const balance = getBalance(customer.statement)
+
+  if (balance < amount) {
+    return res.status(400).json({ error: 'Insulficient funds!'})
+  }
+
+  const statementOperation = {
+    amount,
+    created_at: new Date(),
+    type: 'debit'
+  }
+
+  customer.statement.push(statementOperation)
+  // {
+  //   "amount": 100,
+  //   "created_at": "2021-11-12T00:11:19.282Z",
+  //   "type": "debit"
+  // },
+
+  return res.status(201).json('Saque feito!')
 })
 
 app.listen(4000)
