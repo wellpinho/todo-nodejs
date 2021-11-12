@@ -61,4 +61,29 @@ app.get('/statement', verifyIfExistsAccountCPF, (req, res) => {
   return res.json(customer.statement)
 })
 
+app.post('/deposit', verifyIfExistsAccountCPF, (req, res) => {
+  const { description, amount } = req.body
+
+  // pegando info do middleware e verifica se a conta é válida.
+  const { customer } = req
+
+  // monta o obj
+  const statementOperation = {
+    description,
+    amount,
+    created_at: new Date(),
+    type: 'Crédito'
+  }
+
+  customer.statement.push(statementOperation)
+  // {
+  //   "description": "Depósito Ignit",
+  //   "amount": 1500,
+  //   "created_at": "2021-11-12T00:00:30.713Z",
+  //   "type": "Crédito"
+  // }
+
+  return res.status(201).json('Depósito feito!')
+})
+
 app.listen(4000)
