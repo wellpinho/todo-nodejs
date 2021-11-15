@@ -126,4 +126,30 @@ app.post('/withdrawn', verifyIfExistsAccountCPF, (req, res) => {
   return res.status(201).json('Saque feito!')
 })
 
+app.get('/statement/:date', verifyIfExistsAccountCPF, (req, res) => {
+  // recebendo os dados do middleware
+  const { customer } = req
+  const { date } = req.query
+
+  const dateFormat = new Date(date + ' 00:00')
+
+  // filtrar e retornar soment o extrato do dia
+  const statement = customer.statement.filter(
+    statement => statement.created_at.toDateString() ===
+    new Date(dateFormat).toDateString()
+  )
+
+  // se ele encontrar no filtro retorna aqui
+  return res.json(statement)
+})
+
+app.delete('/account', verifyIfExistsAccountCPF, (req, res) => {
+  const { customer } = request
+
+  // splice podemos usar para remover
+  Customers.splice(customer, 1)
+
+  return res.status(200).json(customer)
+})
+
 app.listen(4000)
